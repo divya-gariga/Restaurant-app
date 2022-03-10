@@ -73,6 +73,7 @@ table1.ondrop = (event) => {
         }
         sessionStorage.setItem(key, JSON.stringify(oldOrderedData));
     }
+
     document.getElementById("para1").innerHTML = "Rs." + totalPrice(key) + " " + "| Total items: " + totalItems(key);
 }
 
@@ -161,7 +162,7 @@ function totalPrice(table) {
         let price = 0;
         let orders = JSON.parse(sessionStorage.getItem(table));
         for (let i = 0; i < orders.length; i++) {
-            price += orders[i][1];
+            price += (orders[i][1] * orders[i][2]);
         }
         return price;
     } else {
