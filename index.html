@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZemosoRestaurantApp</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="flex-container">
+        <div id="table-pane">
+            <div class="header">
+                Tables
+            </div>
+
+            <ul id="tableItems">
+
+                <form><input type="text" id="searchTable" placeholder="Search table" style="width:100%"></form>
+
+                <li id="table1">
+                    <div>Table-1</div>
+                    <span id="para1"></span>
+                </li>
+                <li id="table2">
+                    <div>Table-2</div>
+                    <span id="para2"></span>
+                </li>
+                <li id="table3">
+                    <div>Table-3</div>
+                    <span id="para3"></span>
+                </li>
+            </ul>
+
+        </div>
+        <div id="menu-pane">
+            <div class="header">
+                Menu
+            </div>
+
+            <ul id="menuItems">
+                <form><input type="text" id="searchMenu" placeholder="Search menu..by course,by food.."
+                        style="width:100%;"></form>
+            </ul>
+        </div>
+    </div>
+
+    <div id="myModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h5 id="tableHeader">Order Details</h5>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Item</th>
+                            <th>Price</th>
+                            <th>No. of Servings</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+                <p id="bill" style="text-align: center;"></p>
+            </div>
+            <div class="modal-footer">
+                <p style="text-align:right"><button id="generateBill" style="align-items:center;">Close Session(Generate
+                        Bill)</button></p>
+            </div>
+
+        </div>
+
+
+        <script type="module" src="app.js">
+        </script>
+</body>
+
+</html>
