@@ -42,12 +42,12 @@ A modern, interactive Point of Sale (POS) system for restaurants with a beautifu
 
 ### Table Management
 image.png
-![Table Management](screenshots/Table-Management)
+![Table Management](screenshots/Table-Management.png)
 *Interactive table layout with status indicators*
 
 ### Order and Bill
 
-![Order Placement](screenshots/bill.png)
+![Order Placement](screenshots/Bill.png)
 *interface to see placed orders and Bill generation with itemized details*
 
 
