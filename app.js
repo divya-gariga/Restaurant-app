@@ -1,367 +1,435 @@
 import tablesData from "./tables.js";
-import menuData from "./menu.js"
-//inserting table data
-document.getElementById("para1").innerHTML = "Rs." + tablesData[0]["bill"] + " " + "| Total items: " + tablesData[0]["itemCount"];
-document.getElementById("para2").innerHTML = "Rs." + tablesData[1]["bill"] + " " + "| Total items: " + tablesData[1]["itemCount"];
-document.getElementById("para3").innerHTML = "Rs." + tablesData[2]["bill"] + " " + "| Total items: " + tablesData[2]["itemCount"];
+import { menuData } from './menuData.js';
 
-//rendering menus
-createMenu();
+// Initialize table status
+function initializeTables() {
+    for (let i = 1; i <= 6; i++) {
+        const tableElement = document.getElementById(`table${i}`);
+        const statusElement = document.getElementById(`para${i}`);
+        const statusIndicator = tableElement.querySelector('.table-status');
+        
+        if (tablesData[i-1].bill > 0) {
+            statusElement.textContent = `Rs.${tablesData[i-1].bill} | Items: ${tablesData[i-1].itemCount}`;
+            statusIndicator.className = 'table-status status-occupied';
+        } else {
+            statusElement.textContent = 'Available';
+            statusIndicator.className = 'table-status status-available';
+        }
+    }
+}
+
+// Initialize tables on load
+initializeTables();
+
+// Create menu items with categories
 function createMenu() {
     const menuPane = document.querySelector('#menuItems');
-    let id = 0;
-    menuData.forEach((data) => {
-        const menuItem = document.createElement('li');
-
+    menuPane.innerHTML = ''; // Clear existing content
+    
+    // Create a container for all items
+    const allItemsContainer = document.createElement('div');
+    allItemsContainer.className = 'menu-category';
+    allItemsContainer.dataset.category = 'all';
+    allItemsContainer.style.display = 'block';
+    
+    // Add all items to the container
+    menuData.forEach(data => {
+        const menuItem = document.createElement('div');
+        menuItem.className = 'menu-item';
         menuItem.draggable = true;
+        menuItem.style.display = 'flex'; // Ensure all items are visible by default
         menuItem.ondragstart = function (event) {
-            console.log("dragstart");
-            let foodItemData = JSON.stringify(data);
-            event.dataTransfer.setData("text", foodItemData);
+            event.dataTransfer.setData("text", JSON.stringify(data));
         }
 
-        const menuName = document.createElement('div');
-        const price = document.createElement('span');
-        const course = document.createElement('span');
-        course.className = 'course';
+        menuItem.innerHTML = `
+            <div class="menu-item-info">
+                <div class="menu-item-name">${data.itemName}</div>
+                <div class="menu-item-price">₹${data.price}</div>
+            </div>
+            <span class="menu-item-course">${data.course}</span>
+        `;
 
-        menuName.textContent = data["itemName"];
-        price.textContent = data["price"] + "  ";
-        course.textContent = data["course"];
-
-        menuPane.appendChild(menuItem);
-        menuItem.appendChild(menuName);
-        menuItem.appendChild(price);
-        menuItem.appendChild(course);
-    }
-    );
+        allItemsContainer.appendChild(menuItem);
+    });
+    
+    menuPane.appendChild(allItemsContainer);
 }
 
-//drag and drop functionality
-let table1 = document.getElementById("table1");
-let myParam1 = "Table-1";
-table1.addEventListener("click", () => { createModalVar(table1, myParam1) });
-table1.ondragover = (event) => {
-    event.preventDefault();
-}
-table1.ondrop = (event) => {
-    event.preventDefault();
-    console.log("ondrp");
-    let data = event.dataTransfer.getData("text");
-    let foodItemData = JSON.parse(data);
-    let key = "Table-1"
-    if (!sessionStorage.getItem(key)) {
-        let value = [[]];
-        value[0][0] = foodItemData["itemName"];
-        value[0][1] = foodItemData["price"];
-        value[0][2] = 1;
-        sessionStorage.setItem(key, JSON.stringify(value));
-    }
-    else {
-        let oldOrderedData = JSON.parse(sessionStorage.getItem(key));
-        let flag = 0;
-        for (let i = 0; i < oldOrderedData.length; i++) {
-            if (oldOrderedData[i][0] == foodItemData["itemName"]) {
-                oldOrderedData[i][2] += 1;
-                flag = 1;
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    // Create menu
+    createMenu();
+    
+    // Set "All" category as active by default
+    const allButton = document.querySelector('.category-btn[data-category="all"]');
+    if (allButton) {
+        // Remove active class from all buttons
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.category === 'all') {
+                btn.classList.add('active');
             }
-        }
-        if (flag == 0) {
-            let length = oldOrderedData.length;
-            let newOrder = [foodItemData["itemName"], foodItemData["price"], 1];
-            oldOrderedData.push(newOrder);
-        }
-        sessionStorage.setItem(key, JSON.stringify(oldOrderedData));
+        });
     }
+    
+    // Show all items by default
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        item.style.display = 'flex';
+    });
+    
+    // Initialize tables
+    initializeTables();
+    
+    // Initialize drag and drop
+    initializeDragAndDrop();
+    
+    // Initialize category filters
+    document.querySelectorAll('.category-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            // Update active button
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            const selectedCategory = button.dataset.category;
+            const menuItems = document.querySelectorAll('.menu-item');
+            
+            menuItems.forEach(item => {
+                const itemCategory = item.querySelector('.menu-item-course').textContent;
+                if (selectedCategory === 'all' || itemCategory === selectedCategory) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+});
 
-    document.getElementById("para1").innerHTML = "Rs." + totalPrice(key) + " " + "| Total items: " + totalItems(key);
+// Search functionality for menu
+const searchMenuInput = document.getElementById('searchMenu');
+if (searchMenuInput) {
+    searchMenuInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const categories = document.querySelectorAll('.menu-category');
+        
+        categories.forEach(category => {
+            const items = category.querySelectorAll('.menu-item');
+            let hasVisibleItems = false;
+            
+            items.forEach(item => {
+                const itemName = item.querySelector('.menu-item-name').textContent.toLowerCase();
+                const course = item.querySelector('.menu-item-course').textContent.toLowerCase();
+                
+                if (itemName.includes(searchTerm) || course.includes(searchTerm)) {
+                    item.style.display = '';
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show/hide category based on visible items
+            category.style.display = hasVisibleItems ? 'block' : 'none';
+        });
+    });
 }
 
-
-let table3 = document.getElementById("table3");
-let myParam3 = "Table-3";
-table3.addEventListener("click", () => { createModalVar(table3, myParam3) });
-table3.ondragover = (event) => {
-    event.preventDefault();
-}
-table3.ondrop = (event) => {
-    event.preventDefault();
-    console.log("ondrp");
-    let data = event.dataTransfer.getData("text");
-    let foodItemData = JSON.parse(data);
-    let key = "Table-3";
-    if (!sessionStorage.getItem(key)) {
-        let value = [[]];
-        value[0][0] = foodItemData["itemName"];
-        value[0][1] = foodItemData["price"];
-        value[0][2] = 1;
-        sessionStorage.setItem(key, JSON.stringify(value));
-    }
-    else {
-        let oldOrderedData = JSON.parse(sessionStorage.getItem(key));
-        let flag = 0;
-        for (let i = 0; i < oldOrderedData.length; i++) {
-            if (oldOrderedData[i][0] == foodItemData["itemName"]) {
-                oldOrderedData[i][2] += 1;
-                flag = 1;
+// Table click handlers
+for (let i = 1; i <= 6; i++) {
+    const table = document.getElementById(`table${i}`);
+    const tableName = `Table ${i}`;
+    
+    table.addEventListener("click", () => createModalVar(table, tableName));
+    table.ondragover = (event) => event.preventDefault();
+    table.ondrop = (event) => {
+        event.preventDefault();
+        const data = JSON.parse(event.dataTransfer.getData("text"));
+        const key = `Table-${i}`;
+        
+        if (!sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, JSON.stringify([[data.itemName, data.price, 1]]));
+        } else {
+            const orders = JSON.parse(sessionStorage.getItem(key));
+            const existingItem = orders.find(order => order[0] === data.itemName);
+            
+            if (existingItem) {
+                existingItem[2]++;
+            } else {
+                orders.push([data.itemName, data.price, 1]);
             }
+            
+            sessionStorage.setItem(key, JSON.stringify(orders));
         }
-        if (flag == 0) {
-            let length = oldOrderedData.length;
-            let newOrder = [foodItemData["itemName"], foodItemData["price"], 1];
-            oldOrderedData.push(newOrder);
-        }
-        sessionStorage.setItem(key, JSON.stringify(oldOrderedData));
-
-    }
-    document.getElementById("para3").innerHTML = "Rs." + totalPrice(key) + " " + "| Total items: " + totalItems(key);
-}
-
-
-let table2 = document.getElementById("table2");
-let myParam2 = "Table-2";
-table2.addEventListener("click", () => { createModalVar(table2, myParam2) });
-table2.ondragover = (event) => {
-    event.preventDefault();
-}
-table2.ondrop = (event) => {
-    event.preventDefault();
-    console.log("ondrp");
-    let data = event.dataTransfer.getData("text");
-    let foodItemData = JSON.parse(data);
-    let key = "Table-2";
-    if (!sessionStorage.getItem(key)) {
-        let value = [[]];
-        value[0][0] = foodItemData["itemName"];
-        value[0][1] = foodItemData["price"];
-        value[0][2] = 1;
-        sessionStorage.setItem(key, JSON.stringify(value));
-    }
-    else {
-        let oldOrderedData = JSON.parse(sessionStorage.getItem(key));
-        let flag = 0;
-        for (let i = 0; i < oldOrderedData.length; i++) {
-            if (oldOrderedData[i][0] == foodItemData["itemName"]) {
-                oldOrderedData[i][2] += 1;
-                flag = 1;
-            }
-        }
-        if (flag == 0) {
-            let length = oldOrderedData.length;
-            let newOrder = [foodItemData["itemName"], foodItemData["price"], 1];
-            oldOrderedData.push(newOrder);
-        }
-        sessionStorage.setItem(key, JSON.stringify(oldOrderedData));
-
-    }
-    document.getElementById("para2").innerHTML = "Rs." + totalPrice(key) + " " + "| Total items: " + totalItems(key);
-}
-
-function totalPrice(table) {
-    if (sessionStorage.getItem(table)) {
-        let price = 0;
-        let orders = JSON.parse(sessionStorage.getItem(table));
-        for (let i = 0; i < orders.length; i++) {
-            price += (orders[i][1] * orders[i][2]);
-        }
-        return price;
-    } else {
-        return 0;
-    }
-}
-
-function totalItems(table) {
-    if (sessionStorage.getItem(table)) {
-        let items = 0;
-        let orders = JSON.parse(sessionStorage.getItem(table));
-        for (let i = 0; i < orders.length; i++) {
-            items += orders[i][2];
-        }
-        return items;
-    } else {
-        return 0;
-    }
-
-}
-
-function totalBill(table) {
-    if (sessionStorage.getItem(table)) {
-        let bill = 0;
-        let orders = JSON.parse(sessionStorage.getItem(table));
-        for (let i = 0; i < orders.length; i++) {
-            bill += (orders[i][1] * orders[i][2]);
-        }
-        return bill;
-    } else {
-        return 0;
-    }
-}
-
-let createModalVar = function createModal(element, table) {
-    element.style.backgroundColor = "#ff9933";
-    var modal = document.getElementById("myModal");
-    let tableBody = document.querySelector('tbody');
-    let billTag = document.getElementById('bill');
-    var span = document.getElementsByClassName("close")[0];
-    tableBody.innerHTML = "";
-    document.getElementById('tableHeader').innerHTML = table + " |Order Details";
-    if (sessionStorage.getItem(table)) {
-        let orders = JSON.parse(sessionStorage.getItem(table));
-        for (let i = 0; i < orders.length; i++) {
-            let newRow = document.createElement('tr');
-            let sno = document.createElement('td');
-            let orderItem = document.createElement('td');
-            let orderPrice = document.createElement('td');
-            let noofItems = document.createElement('td');
-            let orderDelete = document.createElement('button');
-
-            sno.innerHTML = i + 1;
-            orderItem.innerHTML = orders[i][0];
-            orderPrice.innerHTML = orders[i][1];
-            noofItems.innerHTML = orders[i][2];
-            orderDelete.textContent = "Delete";
-
-            tableBody.append(newRow);
-            newRow.append(sno);
-            newRow.append(orderItem);
-            newRow.append(orderPrice);
-            newRow.append(noofItems);
-            newRow.append(orderDelete);
-
-            orderDelete.addEventListener("click", () => { deleteItemVar(orderDelete, table, orders[i][0], newRow) });
-        }
-
-        billTag.textContent = "Total: " + totalBill(table) + ".00";
-    }
-
-    span.onclick = function () {
-        modal.style.display = "none";
-        element.style.backgroundColor = "white";
-    }
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-            element.style.backgroundColor = "white";
-        }
-    }
-    let generateBillTag = document.getElementById('generateBill');
-    generateBillTag.onclick = () => {
-        alert("Your Total Bill is: " + totalBill(table));
-        tableBody.innerHTML = "";
-        billTag.textContent = "Total: 00";
-        if (sessionStorage.getItem(table)) {
-            sessionStorage.setItem(table, JSON.stringify([]));
-        }
-        if (table == "Table-1") {
-            document.getElementById("para1").innerHTML = "Rs." + tablesData[0]["bill"] + " " + "| Total items: " + tablesData[0]["itemCount"];
-        }
-        else if (table == "Table-2") {
-            document.getElementById("para2").innerHTML = "Rs." + tablesData[0]["bill"] + " " + "| Total items: " + tablesData[0]["itemCount"];
-        }
-        else {
-            document.getElementById("para3").innerHTML = "Rs." + tablesData[0]["bill"] + " " + "| Total items: " + tablesData[0]["itemCount"];
-        }
-
-
+        
+        updateTableStatus(i);
     };
+}
+
+function updateTableStatus(tableNumber) {
+    const key = `Table-${tableNumber}`;
+    const statusElement = document.getElementById(`para${tableNumber}`);
+    const statusIndicator = document.querySelector(`#table${tableNumber} .table-status`);
+    
+    if (sessionStorage.getItem(key)) {
+        const orders = JSON.parse(sessionStorage.getItem(key));
+        const total = orders.reduce((sum, order) => sum + (order[1] * order[2]), 0);
+        const items = orders.reduce((sum, order) => sum + order[2], 0);
+        
+        statusElement.textContent = `Rs.${total} | Items: ${items}`;
+        statusIndicator.className = 'table-status status-occupied';
+    } else {
+        statusElement.textContent = 'Available';
+        statusIndicator.className = 'table-status status-available';
+    }
+}
+
+// Modal functionality
+let modal = document.getElementById("myModal");
+let span = document.getElementsByClassName("close")[0];
+
+span.onclick = function() {
+    modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
+function createModalVar(element, table) {
+    const tableNumber = table.split(' ')[1];
+    const key = `Table-${tableNumber}`;
+    const orders = sessionStorage.getItem(key) ? JSON.parse(sessionStorage.getItem(key)) : [];
+    
+    document.getElementById("tableHeader").textContent = `${table} - Order Details`;
+    const tbody = document.querySelector('.modal-body tbody');
+    tbody.innerHTML = '';
+    
+    orders.forEach((order, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${order[0]}</td>
+            <td>₹${order[1]}</td>
+            <td>${order[2]}</td>
+            <td>₹${order[1] * order[2]}</td>
+            <td>
+                <button class="w3-button w3-red w3-round" onclick="deleteItem(${index}, '${key}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    const total = orders.reduce((sum, order) => sum + (order[1] * order[2]), 0);
+    document.getElementById("bill").textContent = `Total: ₹${total}`;
+    
     modal.style.display = "block";
 }
 
-
-let deleteItemVar = function deleteItem(element, table, eleToDelete, newRow) {
-    if (sessionStorage.getItem(table)) {
-        let orders = JSON.parse(sessionStorage.getItem(table));
-        for (let i = 0; i < orders.length; i++) {
-            if (orders[i][0] == eleToDelete) {
-                orders.splice(i, 1);
-                break;
-            }
-        }
-        sessionStorage.setItem(table, JSON.stringify(orders));
-        newRow.innerHTML = '';
-        let billTag = document.getElementById('bill');
-        billTag.textContent = "Total: " + totalBill(table) + ".00";
-        if (table == "Table-1") {
-            document.getElementById("para1").innerHTML = "Rs." + totalPrice(table) + " " + "| Total items: " + totalItems(table);
-        }
-        else if (table == "Table-2") {
-            document.getElementById("para2").innerHTML = "Rs." + totalPrice(table) + " " + "| Total items: " + totalItems(table);
-        }
-        else {
-            document.getElementById("para3").innerHTML = "Rs." + totalPrice(table) + " " + "| Total items: " + totalItems(table);
-        }
+// Delete item function
+window.deleteItem = function(index, tableKey) {
+    const orders = JSON.parse(sessionStorage.getItem(tableKey));
+    orders.splice(index, 1);
+    
+    if (orders.length === 0) {
+        sessionStorage.removeItem(tableKey);
+    } else {
+        sessionStorage.setItem(tableKey, JSON.stringify(orders));
     }
+    
+    const tableNumber = tableKey.split('-')[1];
+    updateTableStatus(tableNumber);
+    createModalVar(document.getElementById(`table${tableNumber}`), `Table ${tableNumber}`);
 }
 
-let searchTableVar = document.getElementById('searchTable');
-searchTableVar.onkeyup = () => {
-    let input, filter, ul, li, div, i, txtValue;
-    input = document.getElementById('searchTable');
-    filter = input.value.toUpperCase();
-    ul = document.getElementById("tableItems");
-    li = ul.getElementsByTagName('li');
+// Generate bill function
+document.getElementById("generateBill").onclick = function() {
+    const tableHeader = document.getElementById("tableHeader").textContent;
+    const tableNumber = tableHeader.split(' ')[1];
+    const key = `Table-${tableNumber}`;
+    const orders = JSON.parse(sessionStorage.getItem(key));
+    const total = orders.reduce((sum, order) => sum + (order[1] * order[2]), 0);
+    
+    alert(`Bill for Table ${tableNumber}: ₹${total}`);
+    sessionStorage.removeItem(key);
+    updateTableStatus(tableNumber);
+    modal.style.display = "none";
+}
 
-    // Loop through all list items, and hide those who don't match the search query
-    for (i = 0; i < li.length; i++) {
-        div = li[i].getElementsByTagName("div")[0];
-        txtValue = div.textContent || div.innerText;
-        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-            li[i].style.display = "";
-        } else {
-            li[i].style.display = "none";
-        }
+// Resizer functionality
+const resizer = document.getElementById('resizer');
+const tablePane = document.getElementById('table-pane');
+const menuPane = document.getElementById('menu-pane');
+const restaurantLayout = document.querySelector('.restaurant-layout');
+
+let isResizing = false;
+let startX;
+let startWidth;
+
+// Resizer event handlers
+const mouseDownHandler = function(e) {
+    if (window.innerWidth < 768) return;
+    
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = tablePane.getBoundingClientRect().width;
+
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+    
+    resizer.classList.add('active');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+};
+
+const mouseMoveHandler = function(e) {
+    if (!isResizing) return;
+
+    const dx = e.clientX - startX;
+    const newWidth = startWidth + dx;
+
+    if (newWidth >= 300 && newWidth <= 800) {
+        tablePane.style.flex = `0 0 ${newWidth}px`;
     }
 };
 
-let searchMenuVar = document.getElementById('searchMenu');
-searchMenuVar.onkeydown = () => {
-    let input, filter, ul, li, div, i, txtValue, txtValue1, span;
-    input = document.getElementById('searchMenu');
-    filter = input.value.toUpperCase();
-    ul = document.getElementById("menuItems");
-    li = ul.getElementsByTagName('li');
-
-    // Loop through all list items, and hide those who don't match the search query
-    for (i = 0; i < li.length; i++) {
-        div = li[i].getElementsByTagName("div")[0];
-        span = li[i].getElementsByTagName('span')[1];
-        txtValue = div.textContent || div.innerText;
-        txtValue1 = span.textContent || span.innerHTML;
-        console.log(txtValue + "   " + txtValue1);
-        if ((txtValue.toUpperCase().indexOf(filter) > -1)) {
-            li[i].style.display = "";
-        } else {
-            if ((txtValue1.toUpperCase().indexOf(filter) > -1))
-                li[i].style.display = "";
-            else
-                li[i].style.display = "none";
-        }
-    }
+const mouseUpHandler = function() {
+    isResizing = false;
+    document.removeEventListener('mousemove', mouseMoveHandler);
+    document.removeEventListener('mouseup', mouseUpHandler);
+    resizer.classList.remove('active');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
 };
 
+// Initialize resizer
+resizer.addEventListener('mousedown', mouseDownHandler);
+resizer.addEventListener('selectstart', (e) => e.preventDefault());
 
+// Drag and Drop functionality for tables
+function initializeDragAndDrop() {
+    const tables = document.querySelectorAll('.table-item');
+    let draggedTable = null;
 
+    tables.forEach(table => {
+        // Make tables draggable
+        table.setAttribute('draggable', 'true');
 
+        // Drag start
+        table.addEventListener('dragstart', (e) => {
+            if (window.innerWidth < 768) {
+                e.preventDefault();
+                return;
+            }
+            draggedTable = table;
+            table.classList.add('dragging');
+            
+            // Required for Edge compatibility
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', '');
+            
+            // Add semi-transparency
+            setTimeout(() => {
+                table.style.opacity = '0.5';
+            }, 0);
+        });
 
+        // Drag end
+        table.addEventListener('dragend', () => {
+            draggedTable.style.opacity = '';
+            draggedTable.classList.remove('dragging');
+            draggedTable = null;
+            
+            // Remove all drag-over classes
+            tables.forEach(t => t.classList.remove('drag-over'));
+        });
 
+        // Drag enter
+        table.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            if (table !== draggedTable) {
+                table.classList.add('drag-over');
+            }
+        });
 
+        // Drag leave
+        table.addEventListener('dragleave', () => {
+            table.classList.remove('drag-over');
+        });
 
+        // Drag over
+        table.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (!draggedTable || draggedTable === table) return;
+        });
 
+        // Drop
+        table.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (!draggedTable || draggedTable === table) return;
 
+            const allTables = [...restaurantLayout.querySelectorAll('.table-item')];
+            const draggedIndex = allTables.indexOf(draggedTable);
+            const droppedIndex = allTables.indexOf(table);
 
+            if (draggedIndex < droppedIndex) {
+                table.parentNode.insertBefore(draggedTable, table.nextSibling);
+            } else {
+                table.parentNode.insertBefore(draggedTable, table);
+            }
 
-// [document.querySelector("#table1"), document.querySelector("#table2"),
-// document.querySelector("#table3")].forEach(item => {
-//     item.addEventListener("dropover", event => {
-//         event.preventDefault();
-//         console.log("ondropover");
-//     });
-// });
+            // Remove drag-over class
+            table.classList.remove('drag-over');
+        });
+    });
 
-// [document.getElementById("table1"), document.getElementById("table2"),
-// document.getElementById("table3")].forEach(item => {
-//     item.addEventListener("drop", event => {
-//         event.preventDefault();
-//         console.log("ondrop");
-//     })
-// });
+    // Add drop zone functionality to restaurant layout
+    restaurantLayout.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    });
+
+    restaurantLayout.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(restaurantLayout, e.clientX, e.clientY);
+        if (draggedTable) {
+            if (!afterElement) {
+                restaurantLayout.appendChild(draggedTable);
+            } else {
+                restaurantLayout.insertBefore(draggedTable, afterElement);
+            }
+            draggedTable.style.opacity = '';
+            draggedTable.classList.remove('dragging');
+            draggedTable = null;
+        }
+    });
+}
+
+function getDragAfterElement(container, x, y) {
+    const draggableElements = [...container.querySelectorAll('.table-item:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Update draggable state on resize
+window.addEventListener('resize', () => {
+    const tables = document.querySelectorAll('.table-item');
+    tables.forEach(table => {
+        table.draggable = window.innerWidth >= 768;
+    });
+});

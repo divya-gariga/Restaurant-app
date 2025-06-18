@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZemosoRestaurantApp</title>
+    <title>Restaurant POS System</title>
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -14,74 +15,133 @@
     <div class="flex-container">
         <div id="table-pane">
             <div class="header">
-                Tables
+                <i class="fas fa-utensils"></i> Restaurant Tables
             </div>
 
-            <ul id="tableItems">
+            <div id="tableItems" class="restaurant-layout">
+                <!-- Row 1 - Rectangle tables -->
+                <div id="table1" class="table-item rectangle-table" data-table-type="rectangle">
+                    <div class="table-status status-available"></div>
+                    <div>Table 1</div>
+                    <span id="para1">Available</span>
+                    <div class="chair-top"></div>
+                    <div class="chair-bottom"></div>
+                    <div class="chair-left"></div>
+                    <div class="chair-right"></div>
+                </div>
+                <div id="table2" class="table-item rectangle-table" data-table-type="rectangle">
+                    <div class="table-status status-available"></div>
+                    <div>Table 2</div>
+                    <span id="para2">Available</span>
+                    <div class="chair-top"></div>
+                    <div class="chair-bottom"></div>
+                    <div class="chair-left"></div>
+                    <div class="chair-right"></div>
+                </div>
 
-                <form><input type="text" id="searchTable" placeholder="Search table" style="width:100%"></form>
+                <!-- Center round table -->
+                <div id="table3" class="table-item round-table" data-table-type="round">
+                    <div class="table-status status-available"></div>
+                    <div>Table 3</div>
+                    <span id="para3">Available</span>
+                    <div class="chair-top"></div>
+                    <div class="chair-bottom"></div>
+                    <div class="chair-left"></div>
+                    <div class="chair-right"></div>
+                </div>
 
-                <li id="table1">
-                    <div>Table-1</div>
-                    <span id="para1"></span>
-                </li>
-                <li id="table2">
-                    <div>Table-2</div>
-                    <span id="para2"></span>
-                </li>
-                <li id="table3">
-                    <div>Table-3</div>
-                    <span id="para3"></span>
-                </li>
-            </ul>
+                <!-- Side rectangle tables -->
+                <div id="table4" class="table-item rectangle-table" data-table-type="rectangle">
+                    <div class="table-status status-available"></div>
+                    <div>Table 4</div>
+                    <span id="para4">Available</span>
+                    <div class="chair-top"></div>
+                    <div class="chair-bottom"></div>
+                    <div class="chair-left"></div>
+                    <div class="chair-right"></div>
+                </div>
+                <div id="table5" class="table-item rectangle-table" data-table-type="rectangle">
+                    <div class="table-status status-available"></div>
+                    <div>Table 5</div>
+                    <span id="para5">Available</span>
+                    <div class="chair-top"></div>
+                    <div class="chair-bottom"></div>
+                    <div class="chair-left"></div>
+                    <div class="chair-right"></div>
+                </div>
 
+                <!-- Bottom round table -->
+                <div id="table6" class="table-item round-table" data-table-type="round">
+                    <div class="table-status status-available"></div>
+                    <div>Table 6</div>
+                    <span id="para6">Available</span>
+                    <div class="chair-top"></div>
+                    <div class="chair-bottom"></div>
+                    <div class="chair-left"></div>
+                    <div class="chair-right"></div>
+                </div>
+            </div>
         </div>
+        
+        <div class="resizer" id="resizer"></div>
+
         <div id="menu-pane">
             <div class="header">
-                Menu
+                <i class="fas fa-book-open"></i> Menu
             </div>
 
-            <ul id="menuItems">
-                <form><input type="text" id="searchMenu" placeholder="Search menu..by course,by food.."
-                        style="width:100%;"></form>
-            </ul>
+            <div class="menu-search-container">
+                <input type="text" id="searchMenu" placeholder="Search menu items..." class="menu-search">
+                <div class="category-filters">
+                    <button class="category-btn active" data-category="all">All</button>
+                    <button class="category-btn" data-category="appetizers">Appetizers</button>
+                    <button class="category-btn" data-category="main course">Main Course</button>
+                    <button class="category-btn" data-category="breads">Breads</button>
+                    <button class="category-btn" data-category="desserts">Desserts</button>
+                    <button class="category-btn" data-category="beverages">Beverages</button>
+                </div>
+            </div>
+
+            <div id="menuItems">
+                <!-- Categories will be dynamically inserted here -->
+            </div>
         </div>
     </div>
 
     <div id="myModal" class="modal">
-        <!-- Modal content -->
         <div class="modal-content">
             <div class="modal-header">
                 <span class="close">&times;</span>
                 <h5 id="tableHeader">Order Details</h5>
             </div>
             <div class="modal-body">
-                <table class="table table-striped">
+                <table class="table">
                     <thead>
                         <tr>
                             <th>S.No</th>
                             <th>Item</th>
                             <th>Price</th>
-                            <th>No. of Servings</th>
-                            <th>Delete</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-
                     </tbody>
                 </table>
-                <p id="bill" style="text-align: center;"></p>
+                <div class="bill-summary">
+                    <p id="bill" style="text-align: right; font-size: 18px; font-weight: bold;"></p>
+                </div>
             </div>
             <div class="modal-footer">
-                <p style="text-align:right"><button id="generateBill" style="align-items:center;">Close Session(Generate
-                        Bill)</button></p>
+                <button id="generateBill" class="w3-button w3-blue w3-round">
+                    <i class="fas fa-file-invoice"></i> Generate Bill
+                </button>
             </div>
-
         </div>
+    </div>
 
-
-        <script type="module" src="app.js">
-        </script>
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>
